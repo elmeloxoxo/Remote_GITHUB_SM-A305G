@@ -1,0 +1,51 @@
+name: A30 - kernel experimental
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'Revision para comparar; ninguna esta certificada como estable'
+        type: choice
+        default: original-241a585
+        options:
+          - original-241a585
+          - posterior-55d8ab3
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kernel-a30-manual
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Obtener los archivos de esta receta
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar dependencias en el servidor
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential bc bison flex git ca-certificates \
+            libssl-dev libelf-dev libncurses-dev device-tree-compiler \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi python3 zip
+
+      - name: Compilar y registrar el resultado
+        env:
+          A30_REVISION: ${{ inputs.revision }}
+        run: bash scripts/build-kernel.sh
+
+      - name: Guardar imagen, simbolos y registros
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: A30-kernel-${{ inputs.revision }}-${{ github.run_number }}
+          path: artifacts/
+          retention-days: 3
+          if-no-files-found: warn
