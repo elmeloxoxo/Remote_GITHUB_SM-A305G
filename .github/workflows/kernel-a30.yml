@@ -6,10 +6,11 @@ on:
       revision:
         description: 'Revision para comparar; ninguna esta certificada como estable'
         type: choice
-        default: original-241a585
+        default: aod-diag-241a585
         options:
           - original-241a585
           - posterior-55d8ab3
+          - aod-diag-241a585
 
 permissions:
   contents: read

@@ -1,5 +1,20 @@
 # Samsung A30: compilación remota de diagnóstico
 
+## Variante AOD de diagnóstico
+
+En la rama `aod-diagnostics-v1`, ejecutar `aod-diag-241a585`. Se parte del mismo
+commit 241a585 y Clang20 del kernel de referencia ya probado. Solo se aplica
+el parche fijado por hashes de `patches/aod-diagnostic`: comprueba la lectura
+existente de la biblioteca MSS100 y registra ID hexadecimal/proyecto/LPM/power.
+No habilita gestos por la fuerza ni agrega escrituras de firmware.
+
+Es instrumentacion, no un arreglo funcional de AOD ni una solucion de panics.
+El artefacto incluye parche, hashes y `kernel-release.txt`; su nombre distingue
+esta variante. El empaquetado local debe preservar ramdisk y compatibilidad
+de root/perfil/panel. El retorno de esta prueba debe ser al Clang20 actual.
+El build de referencia anterior fue ejecutado con exito en el run 43363501135;
+las notas historicas de preparacion de abajo describen la receta inicial.
+
 Este paquete compila **solo el kernel** en un servidor de GitHub Actions. Las
 fuentes, herramientas y archivos grandes permanecen en el servidor. No instala
 Ubuntu en tu PC, no se conecta al teléfono y no flashea nada.

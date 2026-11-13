@@ -8,9 +8,11 @@ ARTIFACTS="$RECIPE_ROOT/artifacts"
 mkdir -p "$ARTIFACTS"
 exec > >(tee -a "$ARTIFACTS/build.log") 2>&1
 
+DIAGNOSTIC=0
 case "${A30_REVISION:-original-241a585}" in
   original-241a585) KERNEL_REV=241a585e09e4a5d4c416b9a16c683cb4af6460e9 ;;
   posterior-55d8ab3) KERNEL_REV=55d8ab30547ef33dd3f900fec5f8f98f764b3352 ;;
+  aod-diag-241a585) KERNEL_REV=241a585e09e4a5d4c416b9a16c683cb4af6460e9; DIAGNOSTIC=1 ;;
   *) echo 'Revision no permitida'; exit 1 ;;
 esac
 KERNEL_REPO=https://github.com/Shaheddan/android_kernel_samsung_exynos7885.git
@@ -51,6 +53,12 @@ git -C "$SRC" checkout --detach FETCH_HEAD
 [ "$(git -C "$SRC" rev-parse HEAD)" = "$KERNEL_REV" ]
 # KernelSU-Next is vendored in this revision. No remote install script is run.
 [ -d "$SRC/KernelSU-Next/kernel" ]
+if [ "$DIAGNOSTIC" = 1 ]; then
+  python3 "$RECIPE_ROOT/scripts/apply-aod-diagnostic.py" "$SRC" "$ARTIFACTS"
+  LOCAL_SUFFIX="-A30-aoddiag1-${KERNEL_REV:0:10}"
+else
+  LOCAL_SUFFIX="-A30-experimental-${KERNEL_REV:0:10}"
+fi
 
 git clone --depth=1 --filter=blob:none --sparse "$CLANG_REPO" "$TOOLCHAIN"
 git -C "$TOOLCHAIN" fetch --depth=1 origin "$CLANG_REV"
@@ -76,7 +84,7 @@ MAKE_ARGS=(
   CROSS_COMPILE=aarch64-linux-gnu-
   CROSS_COMPILE_ARM32=arm-linux-gnueabi-
   CLANG_TRIPLE=aarch64-linux-gnu-
-  LOCALVERSION="-A30-experimental-${KERNEL_REV:0:10}"
+  LOCALVERSION="$LOCAL_SUFFIX"
 )
 
 make "${MAKE_ARGS[@]}" olddefconfig
@@ -91,6 +99,7 @@ make "${MAKE_ARGS[@]}" -j"$(nproc)" Image
 cp "$OUT/arch/arm64/boot/Image" "$ARTIFACTS/Image"
 cp "$OUT/vmlinux" "$ARTIFACTS/vmlinux"
 cp "$OUT/System.map" "$ARTIFACTS/System.map"
+cp "$OUT/include/config/kernel.release" "$ARTIFACTS/kernel-release.txt"
 python3 - "$ARTIFACTS/Image" <<'PY'
 from pathlib import Path
 import struct, sys

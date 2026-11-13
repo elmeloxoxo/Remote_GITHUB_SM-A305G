@@ -1,0 +1,36 @@
+--- a/drivers/input/touchscreen/melfas_mss100/melfas_mss100.c
++++ b/drivers/input/touchscreen/melfas_mss100/melfas_mss100.c
+@@ -1111,19 +1111,29 @@
+ static int mms_check_custom_library(struct mms_ts_info *info)
+ {
+ 	u8 wbuf[8];
+-	u8 rbuf[32];
++	u8 rbuf[32] = { 0 };
+ 	int ret = -1;
++	int read_ret;
+ 
+ 	/* read fw build date */
+ 	wbuf[0] = MIP_R0_AOT;
+ 	wbuf[1] = MIP_R0_AOT_CTRL;
+ 
+-	mms_i2c_read(info, wbuf, 2, rbuf, 10);
++	read_ret = mms_i2c_read(info, wbuf, 2, rbuf, 10);
++	if (read_ret) {
++		info->use_sponge = false;
++		input_err(true, &info->client->dev,
++				"%s: AOD library read failed: ret=%d power=%d\n",
++				__func__, read_ret, info->ic_status);
++		return read_ret < 0 ? read_ret : -EIO;
++	}
+ 	msleep(10);
+ 
+ 	input_info(true, &info->client->dev,
+-			"%s: %c%c%c%c\n",
+-			__func__, rbuf[0], rbuf[1], rbuf[2], rbuf[3]);
++			"%s: AOD library id=%02x %02x %02x %02x project=%s lpm=%d power=%d\n",
++			__func__, rbuf[0], rbuf[1], rbuf[2], rbuf[3],
++			info->dtdata->model_name ? info->dtdata->model_name : "(unset)",
++			info->dtdata->support_lpm, info->ic_status);
+ 
+ 	if (info->dtdata->model_name)
+ 		ret = strncmp(rbuf, info->dtdata->model_name, 4);

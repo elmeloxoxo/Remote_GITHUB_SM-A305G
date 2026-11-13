@@ -1,0 +1,12 @@
+{
+  "source_commit": "241a585e09e4a5d4c416b9a16c683cb4af6460e9",
+  "source_sha256": "f3ca2994b19a4e0dc6a9b238dcd7eb25e094af8b73e6a26a9f827123d35ad050",
+  "patched_sha256": "fc6b6a0c86ade79e677d0bac7090e694b026c64380fbbe4a07581d19ee850e15",
+  "patch_applies_and_matches_expected": true,
+  "compiled": false,
+  "installed": false,
+  "aod_functional_fix": false,
+  "extra_controller_reads": false,
+  "firmware_writes_added": false,
+  "patch_sha256": "755e98439743084053a31cb0e0f242ac0f3d009d077557801a30d4a4b7ed8bba"
+}
